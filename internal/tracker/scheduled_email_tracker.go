@@ -3,9 +3,12 @@ package scheduled_email_tracker
 import (
 	"time"
 
-	"github.com/sirupsen/logrus"
-	"github.com/sultantemuruly/schedule-checker-service/internal/db"
 	"gorm.io/gorm"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/sultantemuruly/schedule-checker-service/internal/db"
+	"github.com/sultantemuruly/schedule-checker-service/scripts/helpers"
 )
 
 func waitUntilNext5MinuteMark() {
@@ -36,7 +39,13 @@ func logScheduledEmails(gormDB *gorm.DB) {
 	}
 	logrus.Infof("Found %d scheduled emails", len(emails))
 	for _, email := range emails {
-		logrus.Infof("%+v", email)
+		scheduledDate, err := convert_to_local.ConvertToLocalTimezone(email.ScheduledDate, email.Timezone)
+		if err != nil {
+			logrus.Errorf("Failed to convert scheduled date to local timezone: %v", err)
+			continue
+		}
+
+		logrus.Infof("sender: %v, scheduledDate: %v, now: %v", email.Sender, scheduledDate, time.Now())
 	}
 }
 
