@@ -50,12 +50,21 @@ func logScheduledEmails(gormDB *gorm.DB) {
 			)
 			err := helpers.SendEmailRequest(email)
 			if err != nil {
+				email.Status = "failed"
+				saveResult := gormDB.Save(&email)
+				if saveResult.Error != nil {
+					logrus.Errorf("Failed to update email status: %v", saveResult.Error)
+				}
+
 				logrus.Errorf("Failed to send email: %v", err)
 				continue
 			}
 
 			email.Status = "sent"
-			gormDB.Save(&email)
+			saveResult := gormDB.Save(&email)
+			if saveResult.Error != nil {
+				logrus.Errorf("Failed to update email status: %v", saveResult.Error)
+			}
 			count_to_send++
 		}
 	}
