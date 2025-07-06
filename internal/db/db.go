@@ -12,7 +12,7 @@ import (
 func Connect(ctx context.Context, envPath string) (*pgx.Conn, error) {
 	err := godotenv.Load(envPath)
 	if err != nil {
-		logrus.Warn("No .env file found or failed to load .env")
+		return nil, err
 	}
 
 	dbURL := os.Getenv("DATABASE_URL")
