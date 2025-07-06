@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/sultantemuruly/schedule-checker-service/internal/db"
-	// "github.com/sultantemuruly/schedule-checker-service/scripts/helpers"
+	"github.com/sultantemuruly/schedule-checker-service/scripts/helpers"
 )
 
 func waitUntilNext5MinuteMark() {
@@ -48,6 +48,14 @@ func logScheduledEmails(gormDB *gorm.DB) {
 				email.ScheduledDate.UTC().Format(time.RFC3339),
 				nowUTC.Format(time.RFC3339),
 			)
+			err := helpers.SendEmailRequest(email)
+			if err != nil {
+				logrus.Errorf("Failed to send email: %v", err)
+				continue
+			}
+
+			email.Status = "sent"
+			gormDB.Save(&email)
 			count_to_send++
 		}
 	}
