@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/sultantemuruly/schedule-checker-service/internal/db"
-	"github.com/sultantemuruly/schedule-checker-service/scripts/helpers"
+	// "github.com/sultantemuruly/schedule-checker-service/scripts/helpers"
 )
 
 func waitUntilNext5MinuteMark() {
@@ -32,20 +32,29 @@ func waitUntilNext5MinuteMark() {
 
 func logScheduledEmails(gormDB *gorm.DB) {
 	var emails []db.ScheduledEmail
-	result := gormDB.Find(&emails)
+	result := gormDB.Where("status = ?", "pending").Find(&emails)
 	if result.Error != nil {
 		logrus.Errorf("Failed to query scheduled_emails: %v", result.Error)
 		return
 	}
-	logrus.Infof("Found %d scheduled emails", len(emails))
-	for _, email := range emails {
-		scheduledDate, err := convert_to_local.ConvertToLocalTimezone(email.ScheduledDate, email.Timezone)
-		if err != nil {
-			logrus.Errorf("Failed to convert scheduled date to local timezone: %v", err)
-			continue
-		}
+	logrus.Infof("Found %d pending scheduled emails", len(emails))
+	nowUTC := time.Now().UTC()
 
-		logrus.Infof("sender: %v, scheduledDate: %v, now: %v", email.Sender, scheduledDate, time.Now())
+	count_to_send := 0
+	for _, email := range emails {
+		if !email.ScheduledDate.After(nowUTC) { // scheduledDate <= nowUTC
+			logrus.Infof("UserID: %s, ScheduledDate: %s, Now(UTC): %s",
+				email.UserID,
+				email.ScheduledDate.UTC().Format(time.RFC3339),
+				nowUTC.Format(time.RFC3339),
+			)
+			count_to_send++
+		}
+	}
+
+	if count_to_send == 0 {
+		logrus.Infof("No emails to send")
+		return
 	}
 }
 
