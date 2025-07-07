@@ -4,14 +4,14 @@ import (
 	"context"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 )
 
-func Connect(ctx context.Context, envPath string) (*pgx.Conn, error) {
-	err := godotenv.Load(envPath)
-	if err != nil {
-		return nil, err
+func Connect(ctx context.Context) (*pgx.Conn, error) {
+	// Only load .env in local/dev, not in production
+	if _, err := os.Stat(".env"); err == nil {
+		_ = godotenv.Load(".env")
 	}
 
 	dbURL := os.Getenv("DATABASE_URL")
