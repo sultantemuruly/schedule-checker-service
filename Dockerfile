@@ -24,7 +24,7 @@ WORKDIR /app
 # Copy the binary from the builder
 COPY --from=builder /app/schedule-checker .
 
-COPY .env .env
+# COPY .env .env
 
 # Run the binary
 CMD ["./schedule-checker"] 
